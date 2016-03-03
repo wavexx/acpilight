@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+# xbacklight: control backlight brightness on linux using the sys filesystem
+#             with a backward-compatibile user interface
+# Copyright(c) 2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+
+APP_DESC = "control backlight brightness"
+SYS_PATH = "/sys/class/backlight"
+
+import argparse
+import os, sys
+
+
+def error(msg):
+    print(sys.argv[0] + ": " + msg)
+
+def get_controllers():
+    return os.listdir(SYS_PATH)
+
+def list_controllers(ctrls):
+    for ctrl in ctrls:
+        print(ctrl)
+
+def get_raw_brightness(ctrl):
+    return int(open(os.path.join(SYS_PATH, ctrl, "brightness")).read())
+
+def get_raw_max_brightness(ctrl):
+    return int(open(os.path.join(SYS_PATH, ctrl, "max_brightness")).read())
+
+def get_brightness(ctrl):
+    max_b = get_raw_max_brightness(ctrl)
+    cur_b = get_raw_brightness(ctrl)
+    return int(cur_b * 100 / max_b)
+
+def set_raw_brightness(ctrl, b):
+    open(os.path.join(SYS_PATH, ctrl, "brightness"), "w").write(str(b))
+
+def set_brightness(ctrl, pc):
+    max_b = get_raw_max_brightness(ctrl)
+    cur_b = int(pc * max_b / 100)
+    set_raw_brightness(ctrl, cur_b)
+
+def inc_brightness(ctrl, pc):
+    b = get_brightness(ctrl)
+    b = max(min(b + pc, 100), 0)
+    set_brightness(ctrl, b)
+
+def dec_brightness(ctrl, pc):
+    b = get_brightness(ctrl)
+    b = max(min(b - pc, 100), 0)
+    set_brightness(ctrl, b)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=APP_DESC)
+    g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument("-list", action="store_true", help="List controllers")
+    g.add_argument("-get", action="store_true", help="Get brightness")
+    g.add_argument("-set", metavar="PERCENT", type=int, help="Set brightness")
+    g.add_argument("-inc", metavar="PERCENT", type=int, help="Increase brightness")
+    g.add_argument("-dec", metavar="PERCENT", type=int, help="Descrease brightness")
+    ap.add_argument("-ctrl", help="Set controller to use")
+    ap.add_argument("-time", metavar="MILLISECS", type=int,
+                    default=200, help="Not implemented")
+    ap.add_argument("-steps", type=int,
+                    default=20, help="Not implemented")
+    ap.add_argument("-display", help="Ignored")
+    args = ap.parse_args()
+
+    # list controllers
+    ctrls = get_controllers()
+    if args.list:
+        list_controllers(ctrls)
+        return 0
+
+    # set current operating controller
+    if args.ctrl is None:
+        ctrl = ctrls[0]
+    else:
+        if args.ctrl not in ctrls:
+            error("unknown controller '{}'".format(args.ctrl))
+            return 1
+        ctrl = args.ctrl
+
+    # perform the requested action
+    if args.get:
+        print(get_brightness(ctrl))
+    elif args.set:
+        set_brightness(ctrl, args.set)
+    elif args.inc:
+        inc_brightness(ctrl, args.inc)
+    elif args.dec:
+        dec_brightness(ctrl, args.dec)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
