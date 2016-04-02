@@ -59,7 +59,7 @@ def main():
     g.add_argument("-get", action="store_true", help="Get brightness")
     g.add_argument("-set", metavar="PERCENT", type=int, help="Set brightness")
     g.add_argument("-inc", metavar="PERCENT", type=int, help="Increase brightness")
-    g.add_argument("-dec", metavar="PERCENT", type=int, help="Descrease brightness")
+    g.add_argument("-dec", metavar="PERCENT", type=int, help="Decrease brightness")
     ap.add_argument("-ctrl", help="Set controller to use")
     ap.add_argument("-time", metavar="MILLISECS", type=int,
                     default=200, help="Not implemented")
