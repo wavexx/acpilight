@@ -3,13 +3,14 @@
 #             with a backward-compatibile user interface
 # Copyright(c) 2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, division
 
 APP_DESC = "control backlight brightness"
 SYS_PATH = "/sys/class/backlight"
 
 import argparse
 import os, sys
+import time
 
 
 def error(msg):
@@ -22,34 +23,36 @@ def list_controllers(ctrls):
     for ctrl in ctrls:
         print(ctrl)
 
-def get_raw_brightness(ctrl):
-    return int(open(os.path.join(SYS_PATH, ctrl, "brightness")).read())
+def clamp(v, vmin, vmax):
+    return max(min(v, vmax), vmin)
 
-def get_raw_max_brightness(ctrl):
-    return int(open(os.path.join(SYS_PATH, ctrl, "max_brightness")).read())
 
-def get_brightness(ctrl):
-    max_b = get_raw_max_brightness(ctrl)
-    cur_b = get_raw_brightness(ctrl)
-    return int(cur_b * 100 / max_b)
+class Controller(object):
+    def __init__(self, ctrl):
+        self._brightness_path = os.path.join(SYS_PATH, ctrl, "brightness")
+        self._max_brightness = int(open(os.path.join(
+            SYS_PATH, ctrl, "max_brightness")).read())
 
-def set_raw_brightness(ctrl, b):
-    open(os.path.join(SYS_PATH, ctrl, "brightness"), "w").write(str(b))
+    def raw_brightness(self):
+        return int(open(self._brightness_path).read())
 
-def set_brightness(ctrl, pc):
-    max_b = get_raw_max_brightness(ctrl)
-    cur_b = int(pc * max_b / 100)
-    set_raw_brightness(ctrl, cur_b)
+    def brightness(self):
+        return self.raw_brightness() * 100 // self._max_brightness
 
-def inc_brightness(ctrl, pc):
-    b = get_brightness(ctrl)
-    b = max(min(b + pc, 100), 0)
-    set_brightness(ctrl, b)
+    def set_raw_brightness(self, b):
+        open(self._brightness_path, "w").write(str(b))
 
-def dec_brightness(ctrl, pc):
-    b = get_brightness(ctrl)
-    b = max(min(b - pc, 100), 0)
-    set_brightness(ctrl, b)
+    def set_brightness(self, pc):
+        self.set_raw_brightness(pc * self._max_brightness // 100)
+
+
+def sweep_brightness(ctrl, current, target, steps, delay):
+    sleep = (delay / 1000.) / steps
+    for s in range(1, steps):
+        pc = current + (target - current) * s // steps
+        ctrl.set_brightness(pc)
+        time.sleep(sleep)
+    ctrl.set_brightness(target)
 
 
 def main():
@@ -62,9 +65,9 @@ def main():
     g.add_argument("-dec", metavar="PERCENT", type=int, help="Decrease brightness")
     ap.add_argument("-ctrl", help="Set controller to use")
     ap.add_argument("-time", metavar="MILLISECS", type=int,
-                    default=200, help="Not implemented")
+                    default=200, help="Fading period (in milliseconds, default: 200)")
     ap.add_argument("-steps", type=int,
-                    default=20, help="Not implemented")
+                    default=0, help="Fading steps (default: 0)")
     ap.add_argument("-display", help="Ignored")
     args = ap.parse_args()
 
@@ -76,22 +79,32 @@ def main():
 
     # set current operating controller
     if args.ctrl is None:
-        ctrl = ctrls[0]
+        ctrl = Controller(ctrls[0])
     else:
         if args.ctrl not in ctrls:
             error("unknown controller '{}'".format(args.ctrl))
             return 1
-        ctrl = args.ctrl
+        ctrl = Controller(args.ctrl)
 
     # perform the requested action
     if args.get:
-        print(get_brightness(ctrl))
-    elif args.set:
-        set_brightness(ctrl, args.set)
-    elif args.inc:
-        inc_brightness(ctrl, args.inc)
-    elif args.dec:
-        dec_brightness(ctrl, args.dec)
+        print(ctrl.brightness())
+    else:
+        current = ctrl.brightness()
+        if args.set:
+            target = args.set
+        elif args.inc:
+            target = current + args.inc
+        elif args.dec:
+            target = current - args.dec
+        target = clamp(target, 0, 100)
+        if current == target:
+            pass
+        elif args.steps < 1 or args.time < 1:
+            ctrl.set_brightness(target)
+        else:
+            sweep_brightness(ctrl, current, target, args.steps, args.time)
+
     return 0
 
 
