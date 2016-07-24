@@ -91,11 +91,11 @@ def main():
         print(ctrl.brightness())
     else:
         current = ctrl.brightness()
-        if args.set:
+        if args.set is not None:
             target = args.set
-        elif args.inc:
+        elif args.inc is not None:
             target = current + args.inc
-        elif args.dec:
+        elif args.dec is not None:
             target = current - args.dec
         target = clamp(target, 0, 100)
         if current == target:
