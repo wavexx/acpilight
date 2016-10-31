@@ -37,19 +37,19 @@ class Controller(object):
         return int(open(self._brightness_path).read())
 
     def brightness(self):
-        return self.raw_brightness() * 100 // self._max_brightness
+        return self.raw_brightness() * 100 / self._max_brightness
 
     def set_raw_brightness(self, b):
-        open(self._brightness_path, "w").write(str(b))
+        open(self._brightness_path, "w").write(str(int(round(b))))
 
     def set_brightness(self, pc):
-        self.set_raw_brightness(pc * self._max_brightness // 100)
+        self.set_raw_brightness(pc * self._max_brightness / 100)
 
 
 def sweep_brightness(ctrl, current, target, steps, delay):
     sleep = (delay / 1000.) / steps
     for s in range(1, steps):
-        pc = current + (target - current) * s // steps
+        pc = current + (target - current) * s / steps
         ctrl.set_brightness(pc)
         time.sleep(sleep)
     ctrl.set_brightness(target)
@@ -59,10 +59,11 @@ def main():
     ap = argparse.ArgumentParser(description=APP_DESC)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("-list", action="store_true", help="List controllers")
+    g.add_argument("-getf", action="store_true", help="Get fractional brightness")
     g.add_argument("-get", action="store_true", help="Get brightness")
-    g.add_argument("-set", metavar="PERCENT", type=int, help="Set brightness")
-    g.add_argument("-inc", metavar="PERCENT", type=int, help="Increase brightness")
-    g.add_argument("-dec", metavar="PERCENT", type=int, help="Decrease brightness")
+    g.add_argument("-set", metavar="PERCENT", type=float, help="Set brightness")
+    g.add_argument("-inc", metavar="PERCENT", type=float, help="Increase brightness")
+    g.add_argument("-dec", metavar="PERCENT", type=float, help="Decrease brightness")
     ap.add_argument("-ctrl", help="Set controller to use")
     ap.add_argument("-time", metavar="MILLISECS", type=int,
                     default=200, help="Fading period (in milliseconds, default: 200)")
@@ -87,8 +88,10 @@ def main():
         ctrl = Controller(args.ctrl)
 
     # perform the requested action
-    if args.get:
+    if args.getf:
         print(ctrl.brightness())
+    elif args.get:
+        print(int(round(ctrl.brightness())))
     else:
         current = ctrl.brightness()
         if args.set is not None:
