@@ -90,7 +90,7 @@ def main():
     # perform the requested action
     if args.percentage:
         current = ctrl.brightness()
-        arg = args.percentage[0]
+        arg = args.percentage
         if arg.startswith('=') and arg[1:].isdigit():
             target = int(arg[1:])
         elif arg.startswith('+') and arg[1:].isdigit():
