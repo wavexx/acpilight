@@ -55,6 +55,18 @@ def sweep_brightness(ctrl, current, target, steps, delay):
     ctrl.set_brightness(target)
 
 
+def pc(arg):
+    if len(arg) == 0 or arg[0] not in '=+-0123456789':
+        return None
+    if arg[0] not in '=+-':
+        arg = '=' + arg
+    try:
+        float(arg[1:])
+    except ValueError:
+        return None
+    return arg
+
+
 def main():
     ap = argparse.ArgumentParser(description=APP_DESC)
     g = ap.add_mutually_exclusive_group(required=True)
@@ -64,6 +76,8 @@ def main():
     g.add_argument("-set", metavar="PERCENT", type=float, help="Set brightness")
     g.add_argument("-inc", metavar="PERCENT", type=float, help="Increase brightness")
     g.add_argument("-dec", metavar="PERCENT", type=float, help="Decrease brightness")
+    g.add_argument("pc", metavar="PERCENT", type=pc, nargs='?',
+                   help="[=+-]PERCENT to set, increase, decrease brightness")
     ap.add_argument("-ctrl", help="Set controller to use")
     ap.add_argument("-time", metavar="MILLISECS", type=int,
                     default=200, help="Fading period (in milliseconds, default: 200)")
@@ -86,6 +100,16 @@ def main():
             error("unknown controller '{}'".format(args.ctrl))
             return 1
         ctrl = Controller(args.ctrl)
+
+    # uniform set arguments
+    if args.pc is not None:
+        v = float(args.pc[1:])
+        if args.pc[0] == '=':
+            args.set = v
+        elif args.pc[0] == '+':
+            args.inc = v
+        elif args.pc[0] == '-':
+            args.dec = v
 
     # perform the requested action
     if args.getf:
