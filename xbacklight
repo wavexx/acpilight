@@ -127,7 +127,7 @@ def main():
         target = clamp(target, 0, 100)
         if current == target:
             pass
-        elif args.steps < 1 or args.time < 1:
+        elif args.steps <= 1 or args.time < 1:
             ctrl.set_brightness(target)
         else:
             sweep_brightness(ctrl, current, target, args.steps, args.time)
