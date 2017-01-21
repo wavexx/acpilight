@@ -29,16 +29,19 @@ the display brightness.
 
 To do so, place a file in ``/etc/udev/rules.d/90-backlight.rules`` containing::
 
-  SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
-  SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
+  SUBSYSTEM=="backlight", ACTION=="add", \
+    RUN+="/bin/chgrp video %p/brightness", \
+    RUN+="/bin/chmod g+w %p/brightness"
 
 to setup the relevant permissions at boot time. Keyboard backlight control is
-only available on certain laptop models via the leds subsystem. Lenovo
+only available on certain laptop models via the "leds" subsystem. Lenovo
 ThinkPads are known to work. The following rules allow users in the video group
 to set the keyboard backlight as well::
 
-  SUBSYSTEM=="leds", DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", ACTION=="add", RUN+="/bin/chgrp video /sys/class/leds/%k/brightness"
-  SUBSYSTEM=="leds", DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", ACTION=="add", RUN+="/bin/chmod g+w /sys/class/leds/%k/brightness"
+  SUBSYSTEM=="leds", ACTION=="add", \
+    DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", \
+    RUN+="/bin/chgrp video %p/brightness", \
+    RUN+="/bin/chmod g+w %p/brightness"
 
 
 Authors and Copyright
