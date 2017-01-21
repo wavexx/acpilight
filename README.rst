@@ -1,8 +1,10 @@
 acpilight: a backward-compatibile xbacklight replacement
 ========================================================
 
-"acpilight" is a backward-compatibile replacement for xbacklight_, that uses
-the ACPI interface to set the display brightness.
+"acpilight" is a backward-compatibile replacement for xbacklight_ that uses the
+ACPI interface to set the display brightness. On modern laptops "acpilight" can
+control both display and keyboard backlight uniformly on either X11, the
+console or Wayland.
 
 
 Motivation
@@ -30,13 +32,19 @@ To do so, place a file in ``/etc/udev/rules.d/90-backlight.rules`` containing::
   SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
   SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
 
-to setup the relevant permissions at boot time.
+to setup the relevant permissions at boot time. Keyboard backlight control is
+only available on certain laptop models via the leds subsystem. Lenovo
+ThinkPads are known to work. The following rules allow users in the video group
+to set the keyboard backlight as well::
+
+  SUBSYSTEM=="leds", DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", ACTION=="add", RUN+="/bin/chgrp video /sys/class/leds/%k/brightness"
+  SUBSYSTEM=="leds", DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", ACTION=="add", RUN+="/bin/chmod g+w /sys/class/leds/%k/brightness"
 
 
 Authors and Copyright
 ---------------------
 
 | "acpilight" is distributed under GPLv3+ (see COPYING) WITHOUT ANY WARRANTY.
-| Copyright(c) 2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
+| Copyright(c) 2016-2017 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
 
 .. _xbacklight: http://cgit.freedesktop.org/xorg/app/xbacklight
