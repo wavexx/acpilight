@@ -1,14 +1,15 @@
 #!/usr/bin/env python
-# xbacklight: control backlight brightness on linux using the sys filesystem
-#             with a backward-compatibile user interface
-# Copyright(c) 2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+# xbacklight: control backlight and led brightness on linux using the sys
+#             filesystem with a backward-compatibile user interface
+# Copyright(c) 2016-2017 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # -*- coding: utf-8 -*-
-from __future__ import print_function, division
+from __future__ import print_function, division, generators
 
 APP_DESC = "control backlight brightness"
-SYS_PATH = "/sys/class/backlight"
+SYS_PATH = ["/sys/class/backlight", "/sys/class/leds"]
 
 import argparse
+from collections import OrderedDict
 import os, sys
 import time
 
@@ -17,21 +18,20 @@ def error(msg):
     print(sys.argv[0] + ": " + msg)
 
 def get_controllers():
-    return os.listdir(SYS_PATH)
-
-def list_controllers(ctrls):
-    for ctrl in ctrls:
-        print(ctrl)
+    ctrls = OrderedDict()
+    for path in SYS_PATH:
+        for name in os.listdir(path):
+            ctrls[name] = os.path.join(path, name)
+    return ctrls
 
 def clamp(v, vmin, vmax):
     return max(min(v, vmax), vmin)
 
 
 class Controller(object):
-    def __init__(self, ctrl):
-        self._brightness_path = os.path.join(SYS_PATH, ctrl, "brightness")
-        self._max_brightness = int(open(os.path.join(
-            SYS_PATH, ctrl, "max_brightness")).read())
+    def __init__(self, path):
+        self._brightness_path = os.path.join(path, "brightness")
+        self._max_brightness = int(open(os.path.join(path, "max_brightness")).read())
 
     def raw_brightness(self):
         return int(open(self._brightness_path).read())
@@ -89,17 +89,18 @@ def main():
     # list controllers
     ctrls = get_controllers()
     if args.list:
-        list_controllers(ctrls)
+        for name in ctrls:
+            print(name)
         return 0
 
     # set current operating controller
     if args.ctrl is None:
-        ctrl = Controller(ctrls[0])
+        ctrl = Controller(next(iter(ctrls.values())))
     else:
         if args.ctrl not in ctrls:
             error("unknown controller '{}'".format(args.ctrl))
             return 1
-        ctrl = Controller(args.ctrl)
+        ctrl = Controller(ctrls[args.ctrl])
 
     # uniform set arguments
     if args.pc is not None:
