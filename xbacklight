@@ -81,8 +81,11 @@ def main():
     ap.add_argument("-ctrl", help="Set controller to use")
     ap.add_argument("-time", metavar="MILLISECS", type=int,
                     default=200, help="Fading period (in milliseconds, default: 200)")
-    ap.add_argument("-steps", type=int,
+    g = ap.add_mutually_exclusive_group()
+    g.add_argument("-steps", type=int,
                     default=0, help="Fading steps (default: 0)")
+    g.add_argument("-fps", type=int,
+                    default=0, help="Fading frame rate (default: 0)")
     ap.add_argument("-display", help="Ignored")
     args = ap.parse_args()
 
@@ -111,6 +114,8 @@ def main():
             args.inc = v
         elif args.pc[0] == '-':
             args.dec = v
+    if args.fps:
+        args.steps = int((args.fps/1000) * args.time)
 
     # perform the requested action
     if args.getf:
