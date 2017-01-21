@@ -137,4 +137,8 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except IOError as e:
+        error(str(e))
+        sys.exit(1)
