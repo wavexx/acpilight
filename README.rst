@@ -38,8 +38,7 @@ only available on certain laptop models via the "leds" subsystem. Lenovo
 ThinkPads are known to work. The following rules allow users in the video group
 to set the keyboard backlight as well::
 
-  SUBSYSTEM=="leds", ACTION=="add", \
-    DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", \
+  SUBSYSTEM=="leds", ACTION=="add", KERNEL=="*::kbd_backlight", \
     RUN+="/bin/chgrp video %S%p/brightness", \
     RUN+="/bin/chmod g+w %S%p/brightness"
 

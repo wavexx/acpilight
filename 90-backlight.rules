@@ -2,6 +2,6 @@
 SUBSYSTEM=="backlight", ACTION=="add", \
   RUN+="/bin/chgrp video %S%p/brightness", \
   RUN+="/bin/chmod g+w %S%p/brightness"
-SUBSYSTEM=="leds", ACTION=="add", DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", \
+SUBSYSTEM=="leds", ACTION=="add", KERNEL=="*::kbd_backlight", \
   RUN+="/bin/chgrp video %S%p/brightness", \
   RUN+="/bin/chmod g+w %S%p/brightness"
