@@ -30,8 +30,8 @@ the display brightness.
 To do so, place a file in ``/etc/udev/rules.d/90-backlight.rules`` containing::
 
   SUBSYSTEM=="backlight", ACTION=="add", \
-    RUN+="/bin/chgrp video %p/brightness", \
-    RUN+="/bin/chmod g+w %p/brightness"
+    RUN+="/bin/chgrp video %S%p/brightness", \
+    RUN+="/bin/chmod g+w %S%p/brightness"
 
 to setup the relevant permissions at boot time. Keyboard backlight control is
 only available on certain laptop models via the "leds" subsystem. Lenovo
@@ -40,8 +40,8 @@ to set the keyboard backlight as well::
 
   SUBSYSTEM=="leds", ACTION=="add", \
     DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", \
-    RUN+="/bin/chgrp video %p/brightness", \
-    RUN+="/bin/chmod g+w %p/brightness"
+    RUN+="/bin/chgrp video %S%p/brightness", \
+    RUN+="/bin/chmod g+w %S%p/brightness"
 
 
 Differences from xbacklight

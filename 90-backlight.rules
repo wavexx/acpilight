@@ -1,7 +1,7 @@
 # Allow video group to control backlight and leds
 SUBSYSTEM=="backlight", ACTION=="add", \
-  RUN+="/bin/chgrp video %p/brightness", \
-  RUN+="/bin/chmod g+w %p/brightness"
+  RUN+="/bin/chgrp video %S%p/brightness", \
+  RUN+="/bin/chmod g+w %S%p/brightness"
 SUBSYSTEM=="leds", ACTION=="add", DEVPATH=="/devices/platform/*/leds/*::kbd_backlight", \
-  RUN+="/bin/chgrp video %p/brightness", \
-  RUN+="/bin/chmod g+w %p/brightness"
+  RUN+="/bin/chgrp video %S%p/brightness", \
+  RUN+="/bin/chmod g+w %S%p/brightness"
