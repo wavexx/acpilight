@@ -63,8 +63,8 @@ Default is 200. Specifying either the number of fading steps
 actually perform fading.
 .IP "\-steps \fISTEPS\fP"
 Number of fading steps.
-.IP "\-fps \fInumber\fP"
-Target frame rate (steps per second).
+.IP "\-fps \fIFPS\fP"
+Target frame rate (frames/steps per second).
 .IP "\-display \fIIGNORED\fP"
 Ignored for backward compatibility.
 .IP "\-ctrl \fICONTROLLER\fP"
@@ -72,7 +72,7 @@ Set the device name to operate on.
 .SH NOTES
 .B xbacklight
 doesn't lock the backlight device during fading. Running two concurrent fading
-operations will result in the backlight flickering.
+operations will result in backlight flickering.
 .SH AUTHORS
 .B xbacklight
 is part of \fIacpilight\fP (\fIhttps://github.com/wavexx/acpilight\fP) and is
