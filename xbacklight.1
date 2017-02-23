@@ -1,0 +1,81 @@
+.TH XBACKLIGHT 1 1.0
+.SH NAME
+xbacklight \- adjust display and keyboard backlight using the /sys filesystem
+.SH SYNOPSIS
+.B xbacklight
+[\-h|\-help] [\-ctrl \fICTRL\fP] [\-display \fIIGNORED\fP]
+[\-time \fIMILLISECS\fP] [\-steps \fISTEPS\fP | \-fps \fIFPS\fP] ...
+.P
+.B xbacklight
+[flags] -list
+.br
+.B xbacklight
+[flags] -get | \-getf
+.br
+.B xbacklight
+[flags] \-set \fIPERCENT\fP | \-inc \fIPERCENT\fP | \-dec \fIPERCENT\fP
+.br
+.B xbacklight
+[flags] [=]\fIPERCENT\fP | +\fIPERCENT\fP | \-\fIPERCENT\fP
+.SH DESCRIPTION
+.I xbacklight
+can query or set the brightness of display and keyboard backlight.
+.I xbacklight
+operates on the first device found in /sys/class/backlight, unless told
+otherwise. Use \fI\-list\fP to see the full list of available devices that can
+be controlled; then use the \fI-ctrl\fP flag to control them individually.
+.SH QUERY OPERATIONS
+.IP \-list
+Print the list of controllable devices.
+.IP \-get
+Print out the backlight brightness as an percentage of the maximum brightness
+supported.
+.IP \-getf
+Same as \fI\-get\fP, but without rounding.
+.SH SET OPERATIONS
+Both integer and fractional values are accepted when specifying the brightness
+percentage. Regular set flags:
+.IP "\-set \fIPERCENT\fP"
+Sets the backlight brightness to the specified percentage level.
+.IP "\-inc \fIPERCENT\fP"
+Increases brightness by the specified amount.
+.IP "\-dec \fIPERCENT\fP"
+Decreases brightness by the specified amount.
+.P
+Set operations using positional arguments:
+.P
+.PD 0
+.IP "\fBxbacklight \fIPERCENT"
+.IP "\fBxbacklight \fI=PERCENT"
+.PD
+Set brightness (same as \fI\-set PERCENT\fP).
+.IP "\fBxbacklight \fI+PERCENT"
+Increase brightness (same as \fI\-inc PERCENT\fP).
+.IP "\fBxbacklight \fI-PERCENT"
+Decrease brightness (same as \fI\-dec PERCENT\fP).
+.SH OPTIONS
+.IP "-h, \-help"
+Print out a summary of the usage and exit.
+.IP "\-time \fIMILLISECONDS\fP"
+Length of time to spend fading the backlight between old and new value.
+Default is 200. Specifying either the number of fading steps
+(with \fI\-steps\fP) or fading frame rate (with \fI-fps\fP) is required to
+actually perform fading.
+.IP "\-steps \fISTEPS\fP"
+Number of fading steps.
+.IP "\-fps \fInumber\fP"
+Target frame rate (steps per second).
+.IP "\-display \fIIGNORED\fP"
+Ignored for backward compatibility.
+.IP "\-ctrl \fICONTROLLER\fP"
+Set the device name to operate on.
+.SH NOTES
+.B xbacklight
+doesn't lock the backlight device during fading. Running two concurrent fading
+operations will result in the backlight flickering.
+.SH AUTHORS
+.B xbacklight
+is part of \fIacpilight\fP (\fIhttps://github.com/wavexx/acpilight\fP) and is
+distributed under GPLv3+ \fBWITHOUT ANY WARRANTY\fP.
+.br
+Copyright(c) 2016-2017 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
