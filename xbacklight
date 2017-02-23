@@ -68,8 +68,9 @@ def pc(arg):
 
 
 def main():
-    ap = argparse.ArgumentParser(description=APP_DESC)
+    ap = argparse.ArgumentParser(description=APP_DESC, add_help=False)
     g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument("-h", "-help", action="help", help="Show this help and exit")
     g.add_argument("-list", action="store_true", help="List controllers")
     g.add_argument("-getf", action="store_true", help="Get fractional brightness")
     g.add_argument("-get", action="store_true", help="Get brightness")
