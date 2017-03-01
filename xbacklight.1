@@ -23,18 +23,20 @@ can query or set the brightness of display and keyboard backlight.
 .I xbacklight
 operates on the first device found in /sys/class/backlight, unless told
 otherwise. Use \fI\-list\fP to see the full list of available devices that can
-be controlled; then use the \fI-ctrl\fP flag to control them individually.
+be used; then use the \fI-ctrl\fP flag to control them individually.
 .SH QUERY OPERATIONS
 .IP \-list
 Print the list of controllable devices.
 .IP \-get
-Print out the backlight brightness as an percentage of the maximum brightness
-supported.
+Print out the backlight brightness as a percentage.
 .IP \-getf
 Same as \fI\-get\fP, but without rounding.
 .SH SET OPERATIONS
-Both integer and fractional values are accepted when specifying the brightness
-percentage. Regular set flags:
+The brightness can be set with either command flags or positional arguments.
+When changing brightness level, both integer and fractional values (as reported
+by \fI-get\fP and \fI-getf\fP respectively) are accepted.
+.P
+Regular set flags:
 .IP "\-set \fIPERCENT\fP"
 Sets the backlight brightness to the specified percentage level.
 .IP "\-inc \fIPERCENT\fP"
