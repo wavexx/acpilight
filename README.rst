@@ -38,10 +38,15 @@ conservative: only the display brightness can be controlled, and nothing else.
 **Do not set suid permissions on ``xbacklight``!** Similarly, running
 ``xbacklight`` under ``sudo`` is pointless (there's simply no reason to).
 
-Keyboard backlight control is only available on certain laptop models via the
-"leds" subsystem. Lenovo ThinkPads are known to work (via ``-ctrl
-tpacpi::kbd_backlight``). The following rules allow users in the video group to
-set the keyboard backlight as well::
+Keyboard backlight control is also available on certain laptop models via the
+"leds" subsystem. The following laptop models are known to have a controllable
+keyboard backlight:
+
+- Lenovo ThinkPad: ``-ctrl tpacpi::kbd_backlight``
+- Apple MacBook Pro: ``-ctrl smc::kbd_backlight``
+
+The following rules allow users in the video group to set the keyboard
+backlight as well::
 
   SUBSYSTEM=="leds", ACTION=="add", KERNEL=="*::kbd_backlight", \
     RUN+="/bin/chgrp video %S%p/brightness", \
