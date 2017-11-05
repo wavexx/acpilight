@@ -45,6 +45,7 @@ keyboard backlight:
 - Lenovo ThinkPad: ``-ctrl tpacpi::kbd_backlight``
 - Apple MacBook Pro: ``-ctrl smc::kbd_backlight``
 - Dell Latitude/XPS: ``-ctrl dell::kbd_backlight``
+- Asus N-Series Notebooks: ``-ctrl asus::kbd_backlight``
 
 The following rules allow users in the video group to set the keyboard
 backlight as well::
