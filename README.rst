@@ -19,6 +19,9 @@ uses the ACPI interface instead of "XRandR", allowing old scripts to run. As a
 result, ``xbacklight`` can subsequently be used also from the console and
 Wayland (X11 is not used at all).
 
+When paired with the ddcci-backlight_ kernel module, the backlight of most
+professional external monitors can be controlled as well.
+
 
 Setup
 -----
@@ -35,7 +38,7 @@ To do so, place a file in ``/etc/udev/rules.d/90-backlight.rules`` containing::
 
 to setup the relevant permissions at boot time. These rules are *very*
 conservative: only the display brightness can be controlled, and nothing else.
-**Do not set suid permissions on ``xbacklight``!** Similarly, running
+**Do not set suid permissions on xbacklight!** Similarly, running
 ``xbacklight`` under ``sudo`` is pointless (there's simply no reason to).
 
 Keyboard backlight control is also available on certain laptop models via the
@@ -56,6 +59,12 @@ backlight as well::
 
 Please report if other laptops have working interfaces to control the keyboard
 backlight.
+
+If you have an external monitor with which supports the DDC/CI protocol,
+backlight control can be enabled by installing the `appropriate drivers
+<ddcci-backlight_>`_ and loading the ``ddcci-backlight`` module at boot
+time. On Debian, this is done by installing the ``ddcci-dkms`` package
+and then appending ``ddcci-backlight`` to ``/etc/modules``.
 
 
 Differences from xbacklight
@@ -85,3 +94,4 @@ Authors and Copyright
 | Copyright(c) 2016-2017 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
 
 .. _xbacklight: http://cgit.freedesktop.org/xorg/app/xbacklight
+.. _ddcci-backlight: https://gitlab.com/ddcci-driver-linux/ddcci-driver-linux
