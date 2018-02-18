@@ -75,6 +75,10 @@ Set the device name to operate on.
 .B xbacklight
 doesn't lock the backlight device during fading. Running two concurrent fading
 operations will result in backlight flickering.
+.P
+The backlight of most panels cannot be changed at a rate higher than 20-30hz.
+Setting a high \fIFPS\fP value will not improve the transition smoothness
+beyond a certain point.
 .SH AUTHORS
 .B xbacklight
 is part of \fIacpilight\fP (\fIhttps://github.com/wavexx/acpilight\fP) and is
