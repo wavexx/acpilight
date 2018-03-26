@@ -8,12 +8,11 @@ man1dir = $(mandir)/man1
 sysconfdir = /etc
 
 .PHONY: install
-
 install: xbacklight xbacklight.1 90-backlight.rules
 	$(NORMAL_INSTALL)
-	install -vCD xbacklight $(DESTDIR)$(bindir)
-	install -vCD xbacklight.1 $(DESTDIR)$(man1dir)
-	install -vC 90-backlight.rules $(DESTDIR)$(sysconfdir)/udev/rules.d
+	install -vCDt $(DESTDIR)$(bindir) xbacklight
+	install -vCDt $(DESTDIR)$(man1dir) xbacklight.1
+	install -vCDt $(DESTDIR)$(sysconfdir)/udev/rules.d 90-backlight.rules 
 	$(POST_INSTALL)
 	udevadm trigger -s backlight -c add
 
