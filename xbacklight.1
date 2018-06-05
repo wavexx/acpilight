@@ -84,6 +84,17 @@ Most keyboard's backlights have a very coarse resolution, with usually only 4
 brightness steps available. Supplying small relative increments will not
 effectively change the backlight illumination. Use large values (+30) or set
 absolute percentages directly (=70).
+.SH PORTABILITY
+This version of \fBxbacklight\fP is part of "acpilight" and contains
+several enhancements not available in the original version:
+.P
+The command-line flags \fI-list\fP, \fI-ctrl\fP, \fI-getf\fP and
+\fI-fps\fP do not exist in the original \fBxbacklight\fP.
+.P
+Fractional values are not allowed in the original \fBxbacklight\fP.
+.P
+The \fI=\fP (equals) is required by the original version when specifying
+an absolute brightness value, but can be omitted in this version.
 .SH AUTHORS
 .B xbacklight
 is part of \fIacpilight\fP (\fIhttps://github.com/wavexx/acpilight\fP) and is
