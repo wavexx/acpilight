@@ -20,8 +20,9 @@ def error(msg):
 def get_controllers():
     ctrls = OrderedDict()
     for path in SYS_PATH:
-        for name in os.listdir(path):
-            ctrls[name] = os.path.join(path, name)
+        if os.path.isdir(path):
+            for name in os.listdir(path):
+                ctrls[name] = os.path.join(path, name)
     return ctrls
 
 def clamp(v, vmin, vmax):

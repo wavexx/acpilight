@@ -23,6 +23,14 @@ When paired with the ddcci-backlight_ kernel module, the backlight of most
 professional external monitors can be controlled as well.
 
 
+Installation
+------------
+
+If you have ``make`` available, to install the executable, man page, and udev 
+rules; run::
+
+  sudo make install
+
 Setup
 -----
 
