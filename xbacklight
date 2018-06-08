@@ -16,7 +16,7 @@ SYS_PATH = ["/sys/class/backlight", "/sys/class/leds"]
 
 
 def error(msg):
-    print(sys.argv[0] + ": " + msg)
+    sys.stderr.write('{}: {}\n'.format(sys.argv[0], msg))
 
 
 def get_controllers():
