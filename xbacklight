@@ -68,7 +68,7 @@ def pc(arg):
     return arg
 
 
-def main():
+def get_args():
     ap = argparse.ArgumentParser(description=APP_DESC, add_help=False)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("-h", "-help", action="help", help="Show this help and exit")
@@ -89,7 +89,11 @@ def main():
     g.add_argument("-fps", type=int,
                     default=0, help="Fading frame rate (default: 0)")
     ap.add_argument("-display", help="Ignored")
-    args = ap.parse_args()
+    return ap.parse_args()
+
+
+def main():
+    args = get_args()
 
     # list controllers
     ctrls = get_controllers()
