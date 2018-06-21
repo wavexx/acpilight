@@ -98,6 +98,8 @@ default. For smooth transitions, specify the number of fading steps (using
 Authors and Copyright
 ---------------------
 
+"acpilight" can be found at https://gitlab.com/wavexx/acpilight
+
 | "acpilight" is distributed under GPLv3+ (see COPYING) WITHOUT ANY WARRANTY.
 | Copyright(c) 2016-2018 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
 
