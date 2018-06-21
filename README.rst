@@ -41,8 +41,8 @@ advisable (and *recommended*) to setup an "udev" rule to allow users in the
 To do so, place a file in ``/etc/udev/rules.d/90-backlight.rules`` containing::
 
   SUBSYSTEM=="backlight", ACTION=="add", \
-    RUN+="/bin/chgrp video %S%p/brightness", \
-    RUN+="/bin/chmod g+w %S%p/brightness"
+    RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", \
+    RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
 
 to setup the relevant permissions at boot time. These rules are *very*
 conservative: only the display brightness can be controlled, and nothing else.
@@ -62,8 +62,8 @@ The following rules allow users in the video group to set the keyboard
 backlight as well::
 
   SUBSYSTEM=="leds", ACTION=="add", KERNEL=="*::kbd_backlight", \
-    RUN+="/bin/chgrp video %S%p/brightness", \
-    RUN+="/bin/chmod g+w %S%p/brightness"
+    RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", \
+    RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
 
 Please report if other laptops have working interfaces to control the keyboard
 backlight.
