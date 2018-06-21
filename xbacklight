@@ -1,144 +1,213 @@
 #!/usr/bin/env python
-# xbacklight: control backlight and led brightness on linux using the sys
-#             filesystem with a backward-compatibile user interface
-# Copyright(c) 2016-2017 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # -*- coding: utf-8 -*-
-from __future__ import print_function, division, generators
+"""xbacklight: control backlight and led brightness on linux using the sys
+               filesystem with a backward-compatibile user interface
+
+Copyright(c) 2016-2017 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+Copyright(c) 2018 by "Aliaksei Urbanski" <mim@mim.pw>
+"""
+
+from __future__ import division, generators, print_function
+
+import argparse
+import os
+import sys
+import time
 
 APP_DESC = "control backlight brightness"
 SYS_PATH = ["/sys/class/backlight", "/sys/class/leds"]
-
-import argparse
-from collections import OrderedDict
-import os, sys
-import time
+ACTION_MAP = {'=': 'set', '+': 'inc', '-': 'dec'}
+DEFAULT_DELAY = 200
 
 
-def error(msg):
-    print(sys.argv[0] + ": " + msg)
-
-def get_controllers():
-    ctrls = OrderedDict()
-    for path in SYS_PATH:
-        if os.path.isdir(path):
-            for name in os.listdir(path):
-                ctrls[name] = os.path.join(path, name)
-    return ctrls
-
-def clamp(v, vmin, vmax):
-    return max(min(v, vmax), vmin)
+class AcpilightError(Exception):
+    pass
 
 
 class Controller(object):
     def __init__(self, path):
-        self._brightness_path = os.path.join(path, "brightness")
-        self._max_brightness = int(open(os.path.join(path, "max_brightness")).read())
+        self._brightness_path = os.path.join(path, 'brightness')
+        self._max_brightness_path = os.path.join(path, 'max_brightness')
+        self._brightness = None
+        self._max_brightness = None
 
-    def raw_brightness(self):
-        return int(open(self._brightness_path).read())
+    @staticmethod
+    def _get_controllers():
+        for path in SYS_PATH:
+            if os.path.isdir(path):
+                for name in os.listdir(path):
+                    yield path, name
 
+    @classmethod
+    def get_names(cls):
+        for path, name in cls._get_controllers():
+            yield name
+
+    @classmethod
+    def get_controller(cls, controller_name):
+        for path, name in cls._get_controllers():
+            if controller_name is None or controller_name == name:
+                return cls(os.path.join(path, name))
+
+    @property
+    def max_brightness(self):
+        if self._max_brightness is None:
+            with open(self._max_brightness_path) as max_brightness_file:
+                self._max_brightness = int(max_brightness_file.read())
+        return self._max_brightness
+
+    def percent_to_brightness(self, percent):
+        return int(round(percent * self.max_brightness / 100))
+
+    @property
     def brightness(self):
-        return self.raw_brightness() * 100 / self._max_brightness
+        if self._brightness is None:
+            with open(self._brightness_path) as brightness_file:
+                self._brightness = int(brightness_file.read())
+        return self._brightness
 
-    def set_raw_brightness(self, b):
-        open(self._brightness_path, "w").write(str(int(round(b))))
+    @property
+    def brightness_percent(self):
+        return self.brightness * 100 / self.max_brightness
 
-    def set_brightness(self, pc):
-        self.set_raw_brightness(pc * self._max_brightness / 100)
+    def set_brightness(self, raw_brightness):
+        if self.brightness != raw_brightness:
+            with open(self._brightness_path, 'w') as brightness_file:
+                brightness_file.write(str(raw_brightness))
+            self._brightness = raw_brightness
+
+    def set_brightness_percent(self, percent):
+        self.set_brightness(self.percent_to_brightness(percent))
+
+    def sweep_brightness(self, target_brightness, steps, delay):
+        current_brightness = self.brightness
+        delta = target_brightness - current_brightness
+        max_steps = abs(delta)
+        if steps is None or steps > max_steps:
+            steps = max_steps
+        if steps:
+            sleep_interval = (delay / 1000) / steps
+            step_value = (target_brightness - current_brightness) / steps
+            for _ in range(steps - 1):
+                current_brightness += step_value
+                self.set_brightness(int(round(current_brightness)))
+                time.sleep(sleep_interval)
+        self.set_brightness(target_brightness)
+
+    def sweep_brightness_percent(self, target_percent, steps, delay):
+        target_brightness = self.percent_to_brightness(target_percent)
+        self.sweep_brightness(target_brightness, steps, delay)
 
 
-def sweep_brightness(ctrl, current, target, steps, delay):
-    sleep = (delay / 1000.) / steps
-    for s in range(1, steps):
-        pc = current + (target - current) * s / steps
-        ctrl.set_brightness(pc)
-        time.sleep(sleep)
-    ctrl.set_brightness(target)
+class Percent(object):
+    def __init__(self, arg):
+        action = arg and ACTION_MAP.get(arg[0])
+        if action:
+            value = arg[1:]
+        else:
+            action = 'set'
+            value = arg
+
+        if not value:
+            raise AcpilightError('PERCENT value is empty')
+
+        try:
+            self.value = float(value)
+        except ValueError:
+            raise AcpilightError('PERCENT value is not valid')
+
+        self.action = action
+
+    def update_args(self, args):
+        setattr(args, self.action, self.value)
 
 
-def pc(arg):
-    if len(arg) == 0 or arg[0] not in '=+-0123456789':
-        return None
-    if arg[0] not in '=+-':
-        arg = '=' + arg
-    try:
-        float(arg[1:])
-    except ValueError:
-        return None
-    return arg
+def get_args():
+    parser = argparse.ArgumentParser(description=APP_DESC, add_help=False)
+    parser.add_argument("-ctrl", help="Set controller to use")
+    parser.add_argument("-display", help="Ignored")
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-h", "-help", action="help",
+                       help="Show this help and exit")
+    group.add_argument("-list", action="store_true",
+                       help="List controllers")
+    group.add_argument("-getf", action="store_true",
+                       help="Get fractional brightness")
+    group.add_argument("-get", action="store_true",
+                       help="Get brightness")
+    group.add_argument("-set", metavar="PERCENT", type=float,
+                       help="Set brightness")
+    group.add_argument("-inc", metavar="PERCENT", type=float,
+                       help="Increase brightness")
+    group.add_argument("-dec", metavar="PERCENT", type=float,
+                       help="Decrease brightness")
+    group.add_argument("percent", metavar="PERCENT", type=Percent, nargs='?',
+                       help="[=+-]PERCENT to set, increase, decrease "
+                            "brightness")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-fps", type=int, help="Fading frame rate (optional)")
+    group.add_argument("-steps", type=int, help="Fading steps (optional)")
+    parser.add_argument("-time", metavar="MILLISECS", type=int,
+                        help="Fading period (in milliseconds, "
+                             "default: {})".format(DEFAULT_DELAY))
+
+    return parser.parse_args()
 
 
 def main():
-    ap = argparse.ArgumentParser(description=APP_DESC, add_help=False)
-    g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("-h", "-help", action="help", help="Show this help and exit")
-    g.add_argument("-list", action="store_true", help="List controllers")
-    g.add_argument("-getf", action="store_true", help="Get fractional brightness")
-    g.add_argument("-get", action="store_true", help="Get brightness")
-    g.add_argument("-set", metavar="PERCENT", type=float, help="Set brightness")
-    g.add_argument("-inc", metavar="PERCENT", type=float, help="Increase brightness")
-    g.add_argument("-dec", metavar="PERCENT", type=float, help="Decrease brightness")
-    g.add_argument("pc", metavar="PERCENT", type=pc, nargs='?',
-                   help="[=+-]PERCENT to set, increase, decrease brightness")
-    ap.add_argument("-ctrl", help="Set controller to use")
-    ap.add_argument("-time", metavar="MILLISECS", type=int,
-                    default=200, help="Fading period (in milliseconds, default: 200)")
-    g = ap.add_mutually_exclusive_group()
-    g.add_argument("-steps", type=int,
-                    default=0, help="Fading steps (default: 0)")
-    g.add_argument("-fps", type=int,
-                    default=0, help="Fading frame rate (default: 0)")
-    ap.add_argument("-display", help="Ignored")
-    args = ap.parse_args()
+    args = get_args()
 
-    # list controllers
-    ctrls = get_controllers()
     if args.list:
-        for name in ctrls:
+        for name in Controller.get_names():
             print(name)
         return 0
 
     # set current operating controller
-    if args.ctrl is None:
-        ctrl = Controller(next(iter(ctrls.values())))
-    else:
-        if args.ctrl not in ctrls:
-            error("unknown controller '{}'".format(args.ctrl))
-            return 1
-        ctrl = Controller(ctrls[args.ctrl])
-
-    # uniform set arguments
-    if args.pc is not None:
-        v = float(args.pc[1:])
-        if args.pc[0] == '=':
-            args.set = v
-        elif args.pc[0] == '+':
-            args.inc = v
-        elif args.pc[0] == '-':
-            args.dec = v
-    if args.fps:
-        args.steps = int((args.fps/1000) * args.time)
+    controller_name = args.ctrl
+    controller = Controller.get_controller(controller_name)
+    if not controller:
+        raise AcpilightError('unknown controller "{}"'.format(controller_name)
+                             if controller_name else
+                             'no controllers were found')
 
     # perform the requested action
     if args.getf:
-        print(ctrl.brightness())
+        print(controller.brightness_percent)
     elif args.get:
-        print(int(round(ctrl.brightness())))
+        print(int(round(controller.brightness_percent)))
     else:
-        current = ctrl.brightness()
+        if args.percent:
+            # uniform arguments
+            args.percent.update_args(args)
+
         if args.set is not None:
-            target = args.set
+            target_percent = args.set
         elif args.inc is not None:
-            target = current + args.inc
+            target_percent = controller.brightness_percent + args.inc
         elif args.dec is not None:
-            target = current - args.dec
-        target = clamp(target, 0, 100)
-        if current == target:
-            pass
-        elif args.steps <= 1 or args.time < 1:
-            ctrl.set_brightness(target)
+            target_percent = controller.brightness_percent - args.dec
         else:
-            sweep_brightness(ctrl, current, target, args.steps, args.time)
+            raise AcpilightError('action was not defined')
+
+        # clamp target
+        if target_percent > 100:
+            target_percent = 100
+        elif target_percent < 0:
+            target_percent = 0
+
+        fps = args.fps
+        steps = args.steps
+        delay = args.time
+        if not (fps or steps or delay):
+            controller.set_brightness_percent(target_percent)
+        else:
+            if delay is None:
+                delay = DEFAULT_DELAY
+            if fps:
+                steps = int((args.fps / 1000) * delay)
+            controller.sweep_brightness_percent(target_percent, steps, delay)
 
     return 0
 
@@ -146,6 +215,6 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except IOError as e:
-        error(str(e))
+    except (AcpilightError, IOError) as error:
+        sys.stderr.write('{}: {}\n'.format(sys.argv[0], error))
         sys.exit(1)
