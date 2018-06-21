@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # xbacklight: control backlight and led brightness on linux using the sys
 #             filesystem with a backward-compatibile user interface
 # Copyright(c) 2016-2018 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
